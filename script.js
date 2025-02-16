@@ -1,3 +1,6 @@
+// script.js
+// Fetch country data and update the webpage
+
 document.addEventListener("DOMContentLoaded", async function() {
     const countryData = await fetchCountryOfTheWeek();
     if (countryData) {
@@ -23,6 +26,7 @@ function updatePage(country) {
     document.getElementById("population").innerText = `Population: ${country.population.toLocaleString()}`;
     document.getElementById("language").innerText = `Language: ${Object.values(country.languages).join(", ")}`;
     
+    // Load Leaflet Map
     const map = L.map('map').setView([country.latlng[0], country.latlng[1]], 4);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; OpenStreetMap contributors'
@@ -31,15 +35,21 @@ function updatePage(country) {
         .bindPopup(`<b>${country.name.common}</b>`)
         .openPopup();
 
+    // Fetch an image from Wikimedia
     fetchLandmarkImage(country.name.common);
 }
 
 async function fetchLandmarkImage(countryName) {
     try {
-        const response = await fetch(`https://en.wikipedia.org/api/rest_v1/page/media-list/${countryName}`);
+        const response = await fetch(`https://en.wikipedia.org/api/rest_v1/page/media-list/${encodeURIComponent(countryName)}`);
         const data = await response.json();
         if (data.items && data.items.length > 0) {
-            document.getElementById("landmark").src = data.items[0].thumbnail.source;
+            const imageItem = data.items.find(item => item.thumbnail);
+            if (imageItem) {
+                document.getElementById("landmark").src = imageItem.thumbnail.source;
+            } else {
+                console.warn("No suitable landmark image found.");
+            }
         }
     } catch (error) {
         console.error("Error fetching landmark image:", error);
