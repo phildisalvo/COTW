@@ -19,13 +19,12 @@ async function fetchCountryOfTheWeek() {
         return null;
     }
 }
-
 function updatePage(country) {
     document.getElementById("country-name").innerText = country.name.common;
     document.getElementById("flag").src = country.flags.png;
     document.getElementById("population").innerText = `Population: ${country.population.toLocaleString()}`;
     document.getElementById("language").innerText = `Language: ${Object.values(country.languages).join(", ")}`;
-    
+
     // Load Leaflet Map
     const map = L.map('map').setView([country.latlng[0], country.latlng[1]], 4);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -35,23 +34,17 @@ function updatePage(country) {
         .bindPopup(`<b>${country.name.common}</b>`)
         .openPopup();
 
-    // Fetch an image from Wikimedia
-    fetchLandmarkImage(country.name.common);
+    // Load landmark image from local storage
+    loadLocalLandmarkImage(country.name.common);
 }
 
-async function fetchLandmarkImage(countryName) {
-    try {
-        const response = await fetch(`https://en.wikipedia.org/api/rest_v1/page/media-list/${encodeURIComponent(countryName)}`);
-        const data = await response.json();
-        if (data.items && data.items.length > 0) {
-            const imageItem = data.items.find(item => item.thumbnail);
-            if (imageItem) {
-                document.getElementById("landmark").src = imageItem.thumbnail.source;
-            } else {
-                console.warn("No suitable landmark image found.");
-            }
-        }
-    } catch (error) {
-        console.error("Error fetching landmark image:", error);
-    }
+function loadLocalLandmarkImage(countryName) {
+    const formattedName = countryName.toLowerCase().replace(/\s+/g, "-"); // Convert to lowercase and replace spaces with "-"
+    const imagePath = `landmarks/${formattedName}.jpg`; // Adjust file extension if needed
+    document.getElementById("landmark").src = imagePath;
+    document.getElementById("landmark").onerror = function() {
+        console.warn("No local landmark image found, using placeholder.");
+        this.src = "landmarks/default.jpg"; // Provide a default fallback image
+    };
 }
+
