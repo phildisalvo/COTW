@@ -10,10 +10,10 @@ document.addEventListener("DOMContentLoaded", async function() {
 
 async function fetchCountryOfTheWeek() {
     try {
-        const response = await fetch("countries.json");
+        const response = await fetch("countries.json"); // Load the user-uploaded country list
         const countries = await response.json();
         
-        // Get current week of the year
+        // Get current week number
         const weekNumber = new Date().getWeekNumber();
         
         // Select the country based on the week number (looping over the list)
@@ -44,13 +44,12 @@ Date.prototype.getWeekNumber = function () {
     return Math.ceil((((this - firstJan) / 86400000) + firstJan.getDay() + 1) / 7);
 };
 
-}
 function updatePage(country) {
     document.getElementById("country-name").innerText = country.name.common;
     document.getElementById("flag").src = country.flags.png;
     document.getElementById("population").innerText = `Population: ${country.population.toLocaleString()}`;
     document.getElementById("language").innerText = `Language: ${Object.values(country.languages).join(", ")}`;
-
+    
     // Load Leaflet Map
     const map = L.map('map').setView([country.latlng[0], country.latlng[1]], 4);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -60,17 +59,20 @@ function updatePage(country) {
         .bindPopup(`<b>${country.name.common}</b>`)
         .openPopup();
 
-    // Load landmark image from local storage
+    // Load local landmark image if available
     loadLocalLandmarkImage(country.name.common);
 }
 
 function loadLocalLandmarkImage(countryName) {
     const formattedName = countryName.toLowerCase().replace(/\s+/g, "-"); // Convert to lowercase and replace spaces with "-"
     const imagePath = `landmarks/${formattedName}.jpg`; // Adjust file extension if needed
-    document.getElementById("landmark").src = imagePath;
-    document.getElementById("landmark").onerror = function() {
+
+    console.log("Attempting to load:", imagePath); // Debugging line
+
+    const landmarkImage = document.getElementById("landmark");
+    landmarkImage.src = imagePath;
+    landmarkImage.onerror = function() {
         console.warn("No local landmark image found, using placeholder.");
         this.src = "landmarks/default.jpg"; // Provide a default fallback image
     };
 }
-
